@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 def generate_episode(all_embeddings, all_labels, num_classes_per_episode, anchors_per_class=2, num_fillers=10, num_queries=15):
     """
@@ -9,8 +10,10 @@ def generate_episode(all_embeddings, all_labels, num_classes_per_episode, anchor
     total_playlists = all_labels.shape[1]
     
     # 1. Select random playlists for this episode
-    episode_classes = np.random.choice(total_playlists, num_classes_per_episode, replace=False)
-    
+    # For now, we are bypassing this and using all classes since we only have 3
+    #episode_classes = np.random.choice(total_playlists, num_classes_per_episode, replace=False)
+    episode_classes = np.arange(total_playlists)
+
     support_indices = set()
     
     # 2. Sample Anchors (Ensure stability)
