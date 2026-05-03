@@ -42,8 +42,8 @@ input_dim = INPUT_DIM #TODO Change this around. for now, itll be 1000 for max an
 model = SoftProtoNet(input_dim=input_dim, hidden_dim=512, output_dim=256)
 #optimizer = optim.Adam(model.parameters(), lr=1e-2)
 optimizer = optim.Adam([
-    {'params': model.encoder.parameters(), 'lr': 1e-3},
-    {'params': [model.alpha, model.beta], 'lr': 0.01}
+    {'params': model.encoder.parameters(), 'lr': 1e-5},
+    {'params': [model.alpha, model.beta], 'lr': 1e-3}
 ])
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=LR_DECAY_EVERY, gamma = 0.5) #learning rate halving every 2000 episodes as described by the original paper #TODO FACT CHECK
 criterion = nn.BCELoss()
@@ -132,16 +132,12 @@ for episode_batch in range(num_episode_batches):
         # run an episode on the validation set
         model.eval()
         with torch.no_grad():
-            val_S_emb, val_S_lab, val_Q_emb, val_Q_lab, _ = generate_episode(
-                val_embeddings, val_labels, num_classes_per_episode=5
-            )
+            full_train_enc = model.encoder(train_embeddings)
+            full_val_enc = model.encoder(val_embeddings)
             
-            val_S_enc = model.encoder(val_S_emb)
-            val_Q_enc = model.encoder(val_Q_emb)
-            
-            val_protos = model.compute_prototypes(val_S_enc, val_S_lab)
-            val_preds = model(val_Q_enc, val_protos)
-            val_loss = criterion(val_preds, val_Q_lab).item()
+            global_val_protos = model.compute_prototypes(full_train_enc, train_labels)
+            val_preds = model(full_val_enc, global_val_protos)
+            val_loss = criterion(val_preds, val_labels).item()
             
             # current_lr = scheduler.get_last_lr()[0]
             
