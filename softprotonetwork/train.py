@@ -66,6 +66,8 @@ def objective(trial):
     embed_hidden_dim = trial.suggest_categorical("hidden_dim", [256, 512, 1024])
     embed_output_dim = trial.suggest_categorical("output_dim", [64, 128, 256, 512])
 
+    batch_episode_count = trial.suggest_int("batch_episode_count", 1, 8)
+
     encoder_lr = trial.suggest_float("encoder_lr", 1e-6, 1e-2, log=True)
     scaler_lr = trial.suggest_float("scaler_lr", 1e-6, 1e-3, log=True)
 
@@ -87,13 +89,13 @@ def objective(trial):
     criterion = nn.BCELoss()
 
     # Training Loop
-    num_episode_batches = int(MAX_EPISODES / BATCH_EPISODE_COUNT)
+    num_episode_batches = int(MAX_EPISODES / batch_episode_count)
     model.train()
 
     for episode_batch in range(num_episode_batches):
         optimizer.zero_grad()
 
-        for episode in range(BATCH_EPISODE_COUNT):
+        for episode in range(batch_episode_count):
             
         
             # Get episodic data
@@ -117,7 +119,7 @@ def objective(trial):
             
             # Calculate loss and backpropagate
             #print(f"Calculting Loss for Episode {episode + 1}")
-            loss = criterion(predictions, Q_lab) / BATCH_EPISODE_COUNT
+            loss = criterion(predictions, Q_lab) / batch_episode_count
 
 
 
@@ -129,7 +131,7 @@ def objective(trial):
         optimizer.step()
         scheduler.step()
         
-        if episode_batch % int(VAL_EVERY / BATCH_EPISODE_COUNT) == 0:
+        if episode_batch % int(VAL_EVERY / batch_episode_count) == 0:
             enc_grad_norm = get_grad_norm(model.encoder.parameters())
             metric_grad_norm = get_grad_norm([model.alpha, model.beta])
             enc_weight_norm = get_weight_norm(model.encoder.parameters())

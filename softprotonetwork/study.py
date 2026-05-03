@@ -15,7 +15,7 @@ study = optuna.create_study(
     storage="sqlite:///playlist_model.db"
     )
 
-study.optimize(train.objective, n_trials=None, timeout=600, n_jobs = 4) #timeout is in seconds
+study.optimize(train.objective, n_trials=None, n_jobs = 12) #timeout is in seconds
 
 # Print the best results
 print("\n--- OPTIMIZATION FINISHED ---")
