@@ -28,13 +28,22 @@ def get_grad_norm(parameters):
             total_norm += param_norm.item() ** 2
     return total_norm ** 0.5
 
+def get_weight_norm(parameters):
+    """Calculates the Global L2 Norm of gradients."""
+    total_norm = 0.0
+    for p in parameters:
+        param_norm = p.data.norm(2)
+        total_norm += param_norm.item() ** 2
+    return total_norm ** 0.5
+
+
 # Initialization
 input_dim = INPUT_DIM #TODO Change this around. for now, itll be 1000 for max and mean pooling
 model = SoftProtoNet(input_dim=input_dim, hidden_dim=512, output_dim=256)
 #optimizer = optim.Adam(model.parameters(), lr=1e-2)
 optimizer = optim.Adam([
-    {'params': model.encoder.parameters(), 'lr': 1e-6},
-    {'params': [model.alpha, model.beta], 'lr': 0.025}
+    {'params': model.encoder.parameters(), 'lr': 1e-3},
+    {'params': [model.alpha, model.beta], 'lr': 0.01}
 ])
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=LR_DECAY_EVERY, gamma = 0.5) #learning rate halving every 2000 episodes as described by the original paper #TODO FACT CHECK
 criterion = nn.BCELoss()
@@ -67,7 +76,7 @@ print(f"Songs -> Train: {train_embeddings.shape[0]} | Val: {val_embeddings.shape
 
 
 
-#TODO properly impl train/test/val, lr decay, early stopping
+#TODO properly impl early stopping
 
 #TODO impl
 
@@ -118,6 +127,7 @@ for episode_batch in range(num_episode_batches):
     if episode_batch % int(VAL_EVERY / BATCH_EPISODE_COUNT) == 0:
         enc_grad_norm = get_grad_norm(model.encoder.parameters())
         metric_grad_norm = get_grad_norm([model.alpha, model.beta])
+        enc_weight_norm = get_weight_norm(model.encoder.parameters())
 
         # run an episode on the validation set
         model.eval()
@@ -153,5 +163,5 @@ for episode_batch in range(num_episode_batches):
                 
         model.train()
 
-        print(f"Episode {episode_batch * BATCH_EPISODE_COUNT} | Train Loss: {loss.item() * BATCH_EPISODE_COUNT:.4f} | Validation Loss: {val_loss:.4f} | Alpha: {F.softplus(model.alpha).item():.4f} | Beta: {model.beta.item():.4f} | Enc Grad Norm: {enc_grad_norm:.4f} | AlphaBeta Grad Norm: {metric_grad_norm:.4f}")
+        print(f"Episode {episode_batch * BATCH_EPISODE_COUNT} | Train Loss: {loss.item() * BATCH_EPISODE_COUNT:.4f} | Validation Loss: {val_loss:.4f} | Alpha: {F.softplus(model.alpha).item():.4f} | Beta: {model.beta.item():.4f} | Enc Norm: {enc_weight_norm:.4f} | Enc Grad Norm: {enc_grad_norm:.4f} | AlphaBeta Grad Norm: {metric_grad_norm:.4f}")
         
