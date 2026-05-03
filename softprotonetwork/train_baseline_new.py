@@ -9,14 +9,14 @@ from EpisodeGenerator import generate_episode
 #TODO mess with these as needed
 INPUT_DIM = 1000
 TRAIN_SPLIT = 0.5
-TEST_SPLIT = 0.2
-VAL_SPLIT = 0.3
-MAX_EPISODES = 8000
+VAL_SPLIT = 0.5
+MAX_EPISODES = 20000
 VAL_EVERY = 100
 #LR_DECAY_EVERY = 1500 now being handled by the hyperparam optimizer
 BATCH_EPISODE_COUNT = 4
+MAX_VALS_NO_IMPROVE = 30
 
-assert TRAIN_SPLIT + TEST_SPLIT + VAL_SPLIT == 1.0
+assert TRAIN_SPLIT + VAL_SPLIT == 1.0
 
 def get_grad_norm(parameters):
     """Calculates the Global L2 Norm of gradients."""
@@ -46,19 +46,16 @@ labels = torch.from_numpy(np.load("../all_labels.npy")).float()
 num_songs = embeddings.shape[0]
 indics = np.random.permutation(num_songs)
 train_split = int(TRAIN_SPLIT * num_songs)
-val_split = int((TRAIN_SPLIT + VAL_SPLIT) * num_songs)
 
 train_idx = indics[:train_split]
-val_idx = indics[train_split:val_split]
-test_idx = indics[val_split:]
+val_idx = indics[train_split]
+
 
 train_embeddings = embeddings[train_idx]
 train_labels = labels[train_idx]
 val_embeddings = embeddings[val_idx]
 val_labels = labels[val_idx]
-test_embeddings = embeddings[test_idx]
-test_labels = embeddings[test_idx]
-print(f"Songs -> Train: {train_embeddings.shape[0]} | Val: {val_embeddings.shape[0]} | Test: {test_embeddings.shape[0]}")
+print(f"Songs -> Train: {train_embeddings.shape[0]} | Val: {val_embeddings.shape[0]}")
 
 
 def objective(trial):
@@ -71,6 +68,7 @@ def objective(trial):
     decay_step_size = trial.suggest_int("decay_step_size", 500, 2500, step=500)
 
     best_val_loss = -1
+    vals_no_improve = 0
     #parameter selection
 
 
@@ -147,7 +145,11 @@ def objective(trial):
                 if best_val_loss == -1: best_val_loss = val_loss
                 if val_loss < best_val_loss:
                     best_val_loss = val_loss
-                #    epochs_no_improve = 0
+                    vals_no_improve = 0
+                else:
+                    vals_no_improve += 1
+                if vals_no_improve > MAX_VALS_NO_IMPROVE:
+                    break
                 #    # Save the new best weights
                 #    best_model_weights = copy.deepcopy(model.state_dict())
                 #else:
@@ -161,5 +163,5 @@ def objective(trial):
                     
             model.train()
 
-            print(f"Episode {episode_batch * batch_episode_count} | Train Loss: {loss.item() * BATCH_EPISODE_COUNT:.4f} | Validation Loss: {val_loss:.4f} | Alpha: {F.softplus(model.alpha).item():.4f} | Beta: {model.beta.item():.4f} | AlphaBeta Grad Norm: {metric_grad_norm:.4f}")
+            #print(f"Episode {episode_batch * batch_episode_count} | Train Loss: {loss.item() * BATCH_EPISODE_COUNT:.4f} | Validation Loss: {val_loss:.4f} | Alpha: {F.softplus(model.alpha).item():.4f} | Beta: {model.beta.item():.4f} | AlphaBeta Grad Norm: {metric_grad_norm:.4f}")
     return best_val_loss
