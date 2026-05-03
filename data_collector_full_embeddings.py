@@ -4,6 +4,8 @@ import numpy as np
 
 EMBEDDING_SIZE = 500
 
+np.random.seed(42)
+
 def extract_features(embeddings):
     #embeddings shape is (length, 500). We will make 1000 with mean and max (in that order)
     mean_features = list(np.mean(embeddings, axis=0))
@@ -63,5 +65,21 @@ labels = vf(r[:, 1:])
 
 assert labels.shape[0] == embedds.shape[0]
 
-np.save("all_embeddings.npy", embedds)
-np.save("all_labels.npy", labels)
+#now, leave out 31 random samples for test
+indics = np.random.permutation(embedds.shape[0])
+
+test_idx = indics[:31]
+train_idx = indics[31:]
+
+train_embedds = embedds[train_idx]
+train_labels = labels[train_idx]
+
+test_embedds = embedds[test_idx]
+test_labels = labels[test_idx]
+
+
+
+np.save("train_embeddings.npy", train_embedds)
+np.save("test_embeddings.npy", test_embedds)
+np.save("test_labels.npy", test_labels)
+np.save("train_labels.npy", train_labels)
