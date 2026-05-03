@@ -15,6 +15,7 @@ MAX_EPISODES = 8000
 VAL_EVERY = 100
 #LR_DECAY_EVERY = 1500 now being handled by the hyperparam optimizer
 BATCH_EPISODE_COUNT = 4
+MAX_VALS_NO_IMPROVE = 30
 
 assert TRAIN_SPLIT + TEST_SPLIT + VAL_SPLIT == 1.0
 
@@ -78,6 +79,7 @@ def objective(trial):
     decay_step_size = trial.suggest_int("decay_step_size", 500, 2500, step=500)
 
     best_val_loss = -1
+    vals_no_improve = 0
     #parameter selection
 
 
@@ -157,6 +159,11 @@ def objective(trial):
                 if best_val_loss == -1: best_val_loss = val_loss
                 if val_loss < best_val_loss:
                     best_val_loss = val_loss
+                    vals_no_improve = 0
+                else:
+                    vals_no_improve += 1
+                if vals_no_improve > MAX_VALS_NO_IMPROVE:
+                    break
                 #    epochs_no_improve = 0
                 #    # Save the new best weights
                 #    best_model_weights = copy.deepcopy(model.state_dict())
@@ -171,5 +178,5 @@ def objective(trial):
                     
             model.train()
 
-            #print(f"Episode {episode_batch * BATCH_EPISODE_COUNT} | Train Loss: {loss.item() * BATCH_EPISODE_COUNT:.4f} | Validation Loss: {val_loss:.4f} | Alpha: {F.softplus(model.alpha).item():.4f} | Beta: {model.beta.item():.4f} | Enc Norm: {enc_weight_norm:.4f} | Enc Grad Norm: {enc_grad_norm:.4f} | AlphaBeta Grad Norm: {metric_grad_norm:.4f}")
+            print(f"Episode {episode_batch * batch_episode_count} | Train Loss: {loss.item() * batch_episode_count:.4f} | Validation Loss: {val_loss:.4f} | Alpha: {F.softplus(model.alpha).item():.4f} | Beta: {model.beta.item():.4f} | Enc Norm: {enc_weight_norm:.4f} | Enc Grad Norm: {enc_grad_norm:.4f} | AlphaBeta Grad Norm: {metric_grad_norm:.4f}")
     return best_val_loss
