@@ -34,7 +34,7 @@ def generate_episode(all_embeddings, all_labels, num_classes_per_episode, anchor
     
     # 4. Sample Queries (Must be disjoint from support)
     available_queries = list(set(range(len(all_labels))) - set(support_indices))
-    query_indices = np.random.choice(available_queries, num_queries, replace=False)
+    query_indices = np.random.choice(available_queries, min(num_queries, len(available_queries)), replace=False)
     
     # Return the split data sliced to only the classes in this episode
     S_emb, S_lab = all_embeddings[support_indices], all_labels[support_indices][:, episode_classes]

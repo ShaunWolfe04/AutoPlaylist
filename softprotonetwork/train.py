@@ -6,6 +6,16 @@ import torch.nn.functional as F
 import numpy as np
 from EpisodeGenerator import generate_episode
 
+#TODO mess with these as needed
+INPUT_DIM = 400
+TRAIN_SPLIT = 0.8
+TEST_SPLIT = 0.1
+VAL_SPLIT = 0.1
+MAX_EPISODES = 5000
+VAL_EVERY = 100
+
+assert TRAIN_SPLIT + TEST_SPLIT + VAL_SPLIT == 1.0
+
 def get_grad_norm(parameters):
     """Calculates the Global L2 Norm of gradients."""
     total_norm = 0.0
@@ -17,24 +27,51 @@ def get_grad_norm(parameters):
     return total_norm ** 0.5
 
 # Initialization
-input_dim = 400 #TODO Change this around. for now, itll be 1000 for max and mean pooling
+input_dim = INPUT_DIM #TODO Change this around. for now, itll be 1000 for max and mean pooling
 model = SoftProtoNet(input_dim=input_dim, hidden_dim=512, output_dim=256)
-optimizer = optim.Adam(model.parameters(), lr=1e-3)
+#optimizer = optim.Adam(model.parameters(), lr=1e-2)
+optimizer = optim.Adam([
+    {'params': model.encoder.parameters(), 'lr': 1e-4},
+    {'params': [model.alpha, model.beta], 'lr': 1e-2}
+])
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=2000, gamma = 0.5) #learning rate halving every 2000 episodes as described by the original paper #TODO FACT CHECK
 criterion = nn.BCELoss()
+
 
 # Load training and labels all into memory, which should only take like a gigabyte ish
 # train_embeddings should just be [num songs, embedding dimension]
 # train_labels should be [num songs, num playlists]
-train_embeddings = torch.from_numpy(np.load("../all_embeddings.npy")).float()
-print(f"Train embeddings shape: {train_embeddings.shape}")
-train_labels = torch.from_numpy(np.load("../all_labels.npy")).float()
+embeddings = torch.from_numpy(np.load("../all_embeddings.npy")).float()
+labels = torch.from_numpy(np.load("../all_labels.npy")).float()
 
-#TODO properly make a test and train set
+# Split into train test val
+num_songs = embeddings.shape[0]
+indics = np.random.permutation(num_songs)
+train_split = int(TRAIN_SPLIT * num_songs)
+val_split = int((TRAIN_SPLIT + VAL_SPLIT) * num_songs)
 
-#TODO make the embeddings space size modular
+train_idx = indics[:train_split]
+val_idx = indics[train_split:val_split]
+test_idx = indics[val_split:]
+
+train_embeddings = embeddings[train_idx]
+train_labels = labels[train_idx]
+val_embeddings = embeddings[val_idx]
+val_labels = labels[val_idx]
+test_embeddings = embeddings[test_idx]
+test_labels = embeddings[test_idx]
+print(f"Songs -> Train: {train_embeddings.shape[0]} | Val: {val_embeddings.shape[0]} | Test: {test_embeddings.shape[0]}")
+
+
+
+
+#TODO properly impl train/test/val, lr decay, early stopping
+
+#TODO impl
+
 
 # Training Loop
-num_episodes = 5000
+num_episodes = MAX_EPISODES
 model.train()
 
 for episode in range(num_episodes):
@@ -67,11 +104,46 @@ for episode in range(num_episodes):
     loss.backward()
     #print(f"Finished backwards step for Epsiode {episode + 1}")
 
-    enc_grad_norm = get_grad_norm(model.encoder.parameters())
-    metric_grad_norm = get_grad_norm([model.alpha, model.beta])
-
     optimizer.step()
+    scheduler.step()
     
-    if episode % 100 == 0:
-        print(f"Episode {episode} | Loss: {loss.item():.4f} | Alpha: {F.softplus(model.alpha).item():.4f} | Beta: {model.beta.item():.4f} | Enc Grad Norm: {enc_grad_norm:.4f} | AlphaBeta Grad Norm: {metric_grad_norm:.4f}")
+    if episode % VAL_EVERY == 0:
+        enc_grad_norm = get_grad_norm(model.encoder.parameters())
+        metric_grad_norm = get_grad_norm([model.alpha, model.beta])
+
+        # run an episode on the validation set
+        model.eval()
+        with torch.no_grad():
+            val_S_emb, val_S_lab, val_Q_emb, val_Q_lab, _ = generate_episode(
+                val_embeddings, val_labels, num_classes_per_episode=5
+            )
+            
+            val_S_enc = model.encoder(val_S_emb)
+            val_Q_enc = model.encoder(val_Q_emb)
+            
+            val_protos = model.compute_prototypes(val_S_enc, val_S_lab)
+            val_preds = model(val_Q_enc, val_protos)
+            val_loss = criterion(val_preds, val_Q_lab).item()
+            
+            # current_lr = scheduler.get_last_lr()[0]
+            
+            #TODO impl this a bit later
+            # Check Early Stopping Criteria
+            #if val_loss < best_val_loss:
+            #    best_val_loss = val_loss
+            #    epochs_no_improve = 0
+            #    # Save the new best weights
+            #    best_model_weights = copy.deepcopy(model.state_dict())
+            #else:
+            #    epochs_no_improve += 1
+            #    print(f"-> No improvement ({epochs_no_improve}/{patience})")
+            #    
+            #if epochs_no_improve >= patience:
+            #    print("Early stopping triggered! Restoring best weights.")
+            #    model.load_state_dict(best_model_weights)
+            #    break # Exit the training loop early
+                
+        model.train()
+
+        print(f"Episode {episode} | Train Loss: {loss.item():.4f} | Validation Loss: {val_loss:.4f} | Alpha: {F.softplus(model.alpha).item():.4f} | Beta: {model.beta.item():.4f} | Enc Grad Norm: {enc_grad_norm:.4f} | AlphaBeta Grad Norm: {metric_grad_norm:.4f}")
         
