@@ -8,11 +8,13 @@ from EpisodeGenerator import generate_episode
 
 #TODO mess with these as needed
 INPUT_DIM = 400
-TRAIN_SPLIT = 0.8
-TEST_SPLIT = 0.1
-VAL_SPLIT = 0.1
-MAX_EPISODES = 5000
+TRAIN_SPLIT = 0.5
+TEST_SPLIT = 0.2
+VAL_SPLIT = 0.3
+MAX_EPISODES = 100000
 VAL_EVERY = 100
+LR_DECAY_EVERY = 1500
+BATCH_EPISODE_COUNT = 4
 
 assert TRAIN_SPLIT + TEST_SPLIT + VAL_SPLIT == 1.0
 
@@ -31,10 +33,10 @@ input_dim = INPUT_DIM #TODO Change this around. for now, itll be 1000 for max an
 model = SoftProtoNet(input_dim=input_dim, hidden_dim=512, output_dim=256)
 #optimizer = optim.Adam(model.parameters(), lr=1e-2)
 optimizer = optim.Adam([
-    {'params': model.encoder.parameters(), 'lr': 1e-4},
-    {'params': [model.alpha, model.beta], 'lr': 1e-2}
+    {'params': model.encoder.parameters(), 'lr': 1e-6},
+    {'params': [model.alpha, model.beta], 'lr': 0.025}
 ])
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=2000, gamma = 0.5) #learning rate halving every 2000 episodes as described by the original paper #TODO FACT CHECK
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=LR_DECAY_EVERY, gamma = 0.5) #learning rate halving every 2000 episodes as described by the original paper #TODO FACT CHECK
 criterion = nn.BCELoss()
 
 
@@ -71,43 +73,49 @@ print(f"Songs -> Train: {train_embeddings.shape[0]} | Val: {val_embeddings.shape
 
 
 # Training Loop
-num_episodes = MAX_EPISODES
+num_episode_batches = int(MAX_EPISODES / BATCH_EPISODE_COUNT)
 model.train()
 
-for episode in range(num_episodes):
+for episode_batch in range(num_episode_batches):
     optimizer.zero_grad()
+
+    for episode in range(BATCH_EPISODE_COUNT):
+        
     
-    # Get episodic data
-    #print(f"Generating Episode {episode + 1}")
-    S_emb, S_lab, Q_emb, Q_lab, _ = generate_episode(train_embeddings, train_labels, num_classes_per_episode=5)
-    #print(f"Generated Episode {episode + 1}")
-    
-    # Project embeddings into the learned metric space
-    #print(f"Encoding Embeddings of Episode {episode + 1}")
-    S_encoded = model.encoder(S_emb)
-    Q_encoded = model.encoder(Q_emb)
-    #print(f"Encoded Embeddings of Episode {episode + 1}")
-    
-    # Calculate prototypes and predictions
-    #print(f"Calculating Prototypes for Episode {episode + 1}")
-    prototypes = model.compute_prototypes(S_encoded, S_lab)
-    #print(f"Finished Calculating Prototypes for Episode {episode + 1}")
-    #print(f"Calculting Predictions for Episode {episode + 1}")
-    predictions = model(Q_encoded, prototypes)
-    #print(f"Calculated Predictions for Episode {episode + 1}")
-    
-    # Calculate loss and backpropagate
-    #print(f"Calculting Loss for Episode {episode + 1}")
-    loss = criterion(predictions, Q_lab)
-    #print(f"Calculated Loss for Episode {episode + 1}")
-    #print(f"Computing Backwards step for Episode {episode + 1}")
-    loss.backward()
-    #print(f"Finished backwards step for Epsiode {episode + 1}")
+        # Get episodic data
+        #print(f"Generating Episode {episode + 1}")
+        S_emb, S_lab, Q_emb, Q_lab, _ = generate_episode(train_embeddings, train_labels, num_classes_per_episode=5)
+        #print(f"Generated Episode {episode + 1}")
+        
+        # Project embeddings into the learned metric space
+        #print(f"Encoding Embeddings of Episode {episode + 1}")
+        S_encoded = model.encoder(S_emb)
+        Q_encoded = model.encoder(Q_emb)
+        #print(f"Encoded Embeddings of Episode {episode + 1}")
+        
+        # Calculate prototypes and predictions
+        #print(f"Calculating Prototypes for Episode {episode + 1}")
+        prototypes = model.compute_prototypes(S_encoded, S_lab)
+        #print(f"Finished Calculating Prototypes for Episode {episode + 1}")
+        #print(f"Calculting Predictions for Episode {episode + 1}")
+        predictions = model(Q_encoded, prototypes)
+        #print(f"Calculated Predictions for Episode {episode + 1}")
+        
+        # Calculate loss and backpropagate
+        #print(f"Calculting Loss for Episode {episode + 1}")
+        loss = criterion(predictions, Q_lab) / BATCH_EPISODE_COUNT
+
+
+
+        #print(f"Calculated Loss for Episode {episode + 1}")
+        #print(f"Computing Backwards step for Episode {episode + 1}")
+        loss.backward()
+        #print(f"Finished backwards step for Epsiode {episode + 1}")
 
     optimizer.step()
     scheduler.step()
     
-    if episode % VAL_EVERY == 0:
+    if episode_batch % int(VAL_EVERY / BATCH_EPISODE_COUNT) == 0:
         enc_grad_norm = get_grad_norm(model.encoder.parameters())
         metric_grad_norm = get_grad_norm([model.alpha, model.beta])
 
@@ -145,5 +153,5 @@ for episode in range(num_episodes):
                 
         model.train()
 
-        print(f"Episode {episode} | Train Loss: {loss.item():.4f} | Validation Loss: {val_loss:.4f} | Alpha: {F.softplus(model.alpha).item():.4f} | Beta: {model.beta.item():.4f} | Enc Grad Norm: {enc_grad_norm:.4f} | AlphaBeta Grad Norm: {metric_grad_norm:.4f}")
+        print(f"Episode {episode_batch * BATCH_EPISODE_COUNT} | Train Loss: {loss.item() * BATCH_EPISODE_COUNT:.4f} | Validation Loss: {val_loss:.4f} | Alpha: {F.softplus(model.alpha).item():.4f} | Beta: {model.beta.item():.4f} | Enc Grad Norm: {enc_grad_norm:.4f} | AlphaBeta Grad Norm: {metric_grad_norm:.4f}")
         

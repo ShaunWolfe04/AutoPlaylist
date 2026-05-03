@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-def generate_episode(all_embeddings, all_labels, num_classes_per_episode, anchors_per_class=2, num_fillers=10, num_queries=15):
+def generate_episode(all_embeddings, all_labels, num_classes_per_episode, anchors_per_class=2, num_fillers=15, num_queries=15):
     """
     Conceptual generator for a single training episode.
     all_embeddings: Tensor of all training MusiCNN features
