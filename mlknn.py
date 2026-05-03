@@ -1,15 +1,17 @@
 import numpy as np
-from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
-from sklearn.neighbors import NearestNeighbors
+import pandas as pd
+import os
 
 # Config
 TRAIN_EMB_PATH = "train_embeddings.npy"
 TEST_EMB_PATH = "test_embeddings.npy"
 TRAIN_LABELS_PATH = "train_labels.npy"
 TEST_LABELS_PATH = "test_labels.npy"
-PLAYLIST_NAMES = ["workout", "drive", "study"]
+PLAYLIST_NAMES = ["study", "drive", "workout"]
 K_VALUES = [3, 5, 7, 10, 13]
+os.makedirs("results", exist_ok=True)
+OUTPUT_TO = os.path.join("results", "knn_best_predictions.csv")
 
 # Import data from np arrays
 X_train = np.load(TRAIN_EMB_PATH)
@@ -18,6 +20,7 @@ X_test  = np.load(TEST_EMB_PATH)
 Y_train = np.load(TRAIN_LABELS_PATH)
 Y_test  = np.load(TEST_LABELS_PATH)
 
+#print(Y_train)
 print(f"Train embeddings: {X_train.shape}")
 print(f"Test embeddings:  {X_test.shape}")
 print(f"Train labels:     {Y_train.shape}")
@@ -47,7 +50,12 @@ def knn_predict(X_train, Y_train, X_test, k):
 
     return np.array(preds)
 
+# Keep track of best k for csv file saving
 results = []
+best = None
+best_preds = None
+best_k = None
+best_score = float("inf")  # minimizing BCE
 
 for K in K_VALUES:
     print(f"\nRunning kNN Regression with K = {K}")
@@ -61,32 +69,43 @@ for K in K_VALUES:
     print(f"BCE: {bce:.4f}")
 
     results.append((K, mse, bce))
-
-    # Give some samples for testing
-    print("\nSample Predictions")
-
-    for i in range(min(5, len(Y_pred))):
-        print(f"\nSample {i}")
-
-        for j, name in enumerate(PLAYLIST_NAMES):
-            score = Y_pred[i][j]
-
-            if score >= 0.67:
-                label = "YES"
-            elif score >= 0.33:
-                label = "MAYBE"
-            else:
-                label = "NO"
-
-            print(f"{name:10s} score={score:.3f} → {label}")
+    if bce < best_score:
+        best_score = bce
+        best_k = K
+        best_preds = Y_pred
 
 
-# Find the best k
-best = min(results, key=lambda x: x[2])  # minimize BCE
+print("\nBEST K SELECTED")
+print(f"K = {best_k}")
+print(f"BCE = {best_score:.4f}")
 
-print("\nBEST K")
-print(f"K = {best[0]}")
-print(f"MSE = {best[1]:.4f}")
-print(f"BCE = {best[2]:.4f}")
+rows = []
+for i in range(len(best_preds)):
+    rows.append({
+        "study": float(best_preds[i][0]),
+        "drive": float(best_preds[i][1]),
+        "workout": float(best_preds[i][2]),
+    })
 
-# TODO csv file saving for further evaluation between models
+df = pd.DataFrame(rows)
+df.to_csv(OUTPUT_TO, index=False)
+
+print(f"\nSaved best k kNN predictions to {OUTPUT_TO}")
+
+print("\nSample Predictions of best k")
+
+# Give some sample outputs from the 
+for i in range(min(5, len(best_preds))):
+    print(f"\nSample {i}")
+
+    for j, name in enumerate(PLAYLIST_NAMES):
+        score = best_preds[i][j]
+
+        if score >= 0.67:
+            label = "YES"
+        elif score >= 0.33:
+            label = "MAYBE"
+        else:
+            label = "NO"
+
+        print(f"{name:10s} score={score:.3f} → {label}")

@@ -8,16 +8,12 @@ from muq import MuQMuLan
 
 # Config
 AUDIO_DIR = "songs"
-OUTPUT_CSV = "mulan_predictions.csv"
+OUTPUT_CSV =  os.path.join("results", "knn_best_predictions.csv")
 BATCH_SIZE = 8
-PLAYLIST_TEXTS = [ # TODO these probably need to be more descriptive for mulan to have better context
-    "drive",
-    "workout",
-    "study"
-]
+PLAYLIST_TEXTS = ["study", "drive", "workout"]
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-# Helper functions
+
 def load_model():
     model = MuQMuLan.from_pretrained("OpenMuQ/MuQ-MuLan-large")
     model.eval().to(DEVICE)
@@ -42,22 +38,6 @@ def pad_batch(wavs):
     return torch.stack(padded)
 
 
-def rank_playlists(scores, playlist_texts):
-    """
-    Converts similarity scores into ranked outputs.
-    No fake probability thresholds.
-    """
-    sorted_idx = torch.argsort(scores, descending=True)
-
-    return [
-        {
-            "playlist": playlist_texts[i],
-            "score": float(scores[i]),
-            "rank": r + 1
-        }
-        for r, i in enumerate(sorted_idx)
-    ]
-    
 def main():
     model = load_model()
 
@@ -77,7 +57,6 @@ def main():
 
     all_results = []
 
-    # Batch processing
     for i in range(0, len(files), BATCH_SIZE):
         batch_files = files[i:i + BATCH_SIZE]
 
@@ -89,37 +68,31 @@ def main():
 
         audio_emb = F.normalize(audio_emb, dim=-1)
 
-        # cosine similarity
-        sim = audio_emb @ text_emb.T
+        sim = audio_emb @ text_emb.T  # (batch, 3)
 
         for j, file in enumerate(batch_files):
-            scores = sim[j].cpu()
+            scores = sim[j].cpu().numpy()
 
-            ranked = rank_playlists(scores, PLAYLIST_TEXTS)
+            row = {
+                "study": float(scores[0]),
+                "drive": float(scores[1]),
+                "workout": float(scores[2]),
+            }
 
-            for r in ranked:
-                all_results.append({
-                    "file": os.path.basename(file),
-                    "playlist": r["playlist"],
-                    "score": r["score"],
-                    "rank": r["rank"]
-                })
+            all_results.append(row)
 
-    # Save results to csv
+    # Save
     df = pd.DataFrame(all_results)
     df.to_csv(OUTPUT_CSV, index=False)
-
     print(f"\nSaved results to {OUTPUT_CSV}")
+    # Give a few samples for testing purposes
+    print("\nSAMPLE OUTPUT")
 
-    # print some samples for testing purposes
-    print("\n=== SAMPLE OUTPUT ===")
-
-    for file in df["file"].unique()[:5]:
-        print(f"\n{file}")
-        subset = df[df["file"] == file].sort_values("rank")
-
-        for _, row in subset.iterrows():
-            print(f"{row['playlist']:10s} score={row['score']:.3f} rank={row['rank']}")
+    for _, row in df.head(5).iterrows():
+        print(f"\n{row['file']}")
+        print(f"study   : {row['study']:.3f}")
+        print(f"drive : {row['drive']:.3f}")
+        print(f"workout   : {row['workout']:.3f}")
 
 if __name__ == "__main__":
     main()
