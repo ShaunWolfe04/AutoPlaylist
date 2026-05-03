@@ -7,7 +7,7 @@ import numpy as np
 from EpisodeGenerator import generate_episode
 
 #TODO mess with these as needed
-INPUT_DIM = 400
+INPUT_DIM = 1000
 TRAIN_SPLIT = 0.5
 TEST_SPLIT = 0.2
 VAL_SPLIT = 0.3
