@@ -1,6 +1,6 @@
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+#__import__('pysqlite3')
+#import sys
+#sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 #NOTE - this is necessary for compatibility with the mill
 
 
@@ -15,7 +15,7 @@ study = optuna.create_study(
     storage="sqlite:///playlist_model.db"
     )
 
-study.optimize(train.objective, n_trials=None, n_jobs = 12) #timeout is in seconds
+study.optimize(train.objective, n_trials=None, n_jobs = 1) #timeout is in seconds
 
 # Print the best results
 print("\n--- OPTIMIZATION FINISHED ---")
