@@ -1,5 +1,5 @@
 import torch.optim as optim
-from SoftProtoNet import SoftProtoNet
+from BaseLineProtoNet import BaselineSoftProtoNet
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -65,15 +65,8 @@ def objective(trial):
     #TODO add suggestion for pooling strategy
         #we could do a bunch of bool suggestions for min,max,mean,var
 
-
-    #hidden dimension, output dimension, encoder learning rate, scaler learning rate, decay step size, (MAYBE) episodes per batch
-    embed_hidden_dim = trial.suggest_categorical("hidden_dim", [256, 512, 1024])
-    embed_output_dim = trial.suggest_categorical("output_dim", [64, 128, 256, 512])
-
     batch_episode_count = trial.suggest_int("batch_episode_count", 1, 8)
-
-    encoder_lr = trial.suggest_float("encoder_lr", 1e-6, 1e-2, log=True)
-    scaler_lr = trial.suggest_float("scaler_lr", 1e-6, 1e-3, log=True)
+    scaler_lr = trial.suggest_float("scaler_lr", 1e-3, 1e-1, log=True)
 
     decay_step_size = trial.suggest_int("decay_step_size", 500, 2500, step=500)
 
@@ -83,10 +76,9 @@ def objective(trial):
 
     # Initialization
     input_dim = INPUT_DIM #TODO Change this around. for now, itll be 1000 for max and mean pooling
-    model = SoftProtoNet(input_dim=input_dim, hidden_dim=embed_hidden_dim, output_dim=embed_output_dim)
+    model = BaselineSoftProtoNet()
     #optimizer = optim.Adam(model.parameters(), lr=1e-2)
     optimizer = optim.Adam([
-        {'params': model.encoder.parameters(), 'lr': encoder_lr},
         {'params': [model.alpha, model.beta], 'lr': scaler_lr}
     ])
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=decay_step_size, gamma = 0.5) #learning rate halving every 2000 episodes as described by the original paper #TODO FACT CHECK
@@ -136,9 +128,7 @@ def objective(trial):
         scheduler.step()
         
         if episode_batch % int(VAL_EVERY / batch_episode_count) == 0:
-            enc_grad_norm = get_grad_norm(model.encoder.parameters())
             metric_grad_norm = get_grad_norm([model.alpha, model.beta])
-            enc_weight_norm = get_weight_norm(model.encoder.parameters())
 
             # run an episode on the validation set
             model.eval()
@@ -171,5 +161,5 @@ def objective(trial):
                     
             model.train()
 
-            #print(f"Episode {episode_batch * BATCH_EPISODE_COUNT} | Train Loss: {loss.item() * BATCH_EPISODE_COUNT:.4f} | Validation Loss: {val_loss:.4f} | Alpha: {F.softplus(model.alpha).item():.4f} | Beta: {model.beta.item():.4f} | Enc Norm: {enc_weight_norm:.4f} | Enc Grad Norm: {enc_grad_norm:.4f} | AlphaBeta Grad Norm: {metric_grad_norm:.4f}")
+            print(f"Episode {episode_batch * batch_episode_count} | Train Loss: {loss.item() * BATCH_EPISODE_COUNT:.4f} | Validation Loss: {val_loss:.4f} | Alpha: {F.softplus(model.alpha).item():.4f} | Beta: {model.beta.item():.4f} | AlphaBeta Grad Norm: {metric_grad_norm:.4f}")
     return best_val_loss

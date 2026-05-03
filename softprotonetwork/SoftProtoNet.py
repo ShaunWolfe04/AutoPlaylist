@@ -42,12 +42,15 @@ class SoftProtoNet(nn.Module):
         # Calculate squared Euclidean distance
         # Shape: [num_queries, num_classes]
         distances = torch.cdist(query_embeddings, prototypes) ** 2
+
+        embed_dim = query_embeddings.shape[-1]
+        distances = distances / embed_dim
         
         # Constrain alpha to be strictly positive to prevent gradient collapse
         safe_alpha = F.softplus(self.alpha)
         
         # Shift distances and apply Sigmoid
         logits = -safe_alpha * distances + self.beta
-        probabilities = torch.sigmoid(logits)
+        #probabilities = torch.sigmoid(logits)
         
-        return probabilities
+        return logits

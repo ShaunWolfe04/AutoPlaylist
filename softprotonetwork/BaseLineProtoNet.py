@@ -32,10 +32,13 @@ class BaselineSoftProtoNet(nn.Module):
         """
         # Distance calculation is identical
         distances = torch.cdist(query_embeddings, prototypes) ** 2
+
+        embed_dim = query_embeddings.shape[-1]
+        distances = distances / embed_dim
         
         # Alpha and Beta do all the heavy lifting here
         safe_alpha = F.softplus(self.alpha)
         logits = -safe_alpha * distances + self.beta
-        probabilities = torch.sigmoid(logits)
+        #probabilities = torch.sigmoid(logits)
         
-        return probabilities
+        return logits
