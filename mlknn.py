@@ -88,3 +88,5 @@ print("\nBEST K")
 print(f"K = {best[0]}")
 print(f"MSE = {best[1]:.4f}")
 print(f"BCE = {best[2]:.4f}")
+
+# TODO csv file saving for further evaluation between models
