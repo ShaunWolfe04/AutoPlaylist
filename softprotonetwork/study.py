@@ -1,3 +1,9 @@
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+#NOTE - this is necessary for compatibility with the mill
+
+
 import train
 import optuna
 
