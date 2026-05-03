@@ -48,7 +48,7 @@ indics = np.random.permutation(num_songs)
 train_split = int(TRAIN_SPLIT * num_songs)
 
 train_idx = indics[:train_split]
-val_idx = indics[train_split]
+val_idx = indics[train_split:]
 
 
 train_embeddings = embeddings[train_idx]
