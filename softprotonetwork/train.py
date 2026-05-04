@@ -5,12 +5,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 from EpisodeGenerator import generate_episode
+from itertools import combinations
 
 #TODO mess with these as needed
 INPUT_DIM = 1000
 TRAIN_SPLIT = 0.5
 VAL_SPLIT = 0.5
-MAX_EPISODES = 8000
+MAX_EPISODES = 20000
 VAL_EVERY = 100
 #LR_DECAY_EVERY = 1500 now being handled by the hyperparam optimizer
 BATCH_EPISODE_COUNT = 4
@@ -39,7 +40,7 @@ def get_weight_norm(parameters):
 # Load training and labels all into memory, which should only take like a gigabyte ish
 # train_embeddings should just be [num songs, embedding dimension]
 # train_labels should be [num songs, num playlists]
-embeddings = torch.from_numpy(np.load("../train_embeddings.npy")).float()
+embeddings = torch.from_numpy(np.load("../train_embeddings_all_pools.npy")).float()
 labels = torch.from_numpy(np.load("../train_labels.npy")).float()
 
 # Split into train val
@@ -50,16 +51,41 @@ train_split = int(TRAIN_SPLIT * num_songs)
 train_idx = indics[:train_split]
 val_idx = indics[train_split:]
 
-train_embeddings = embeddings[train_idx]
+#train_embeddings = embeddings[train_idx]
 train_labels = labels[train_idx]
-val_embeddings = embeddings[val_idx]
+#val_embeddings = embeddings[val_idx]
 val_labels = labels[val_idx]
-print(f"Songs -> Train: {train_embeddings.shape[0]} | Val: {val_embeddings.shape[0]}")
+#print(f"Songs -> Train: {train_embeddings.shape[0]} | Val: {val_embeddings.shape[0]}")
+
+pools = ["min", "max", "mean", "var"]
 
 
 def objective(trial):
-    #TODO add suggestion for pooling strategy
-        #we could do a bunch of bool suggestions for min,max,mean,var
+
+    # Determine which of the pooling fields to use
+
+    # collect only the pooled parameters
+    poolingParameters = trial.suggest_categorical("Pooling_Parameters", ["min-max", "min-mean", "min-var", 'max-mean', 'max-var', 'mean-var'])
+    poolIndices = []
+    for param in poolingParameters.split("-"):
+        poolIndices.append(pools.index(param))
+    #print(embeddings.shape)
+    #print(poolIndices)
+    train_embeddings = embeddings[train_idx, :, :]
+    train_embeddings = train_embeddings[:, :, poolIndices]
+    #print(train_embeddings.shape)
+    train_embeddings = train_embeddings.flatten(1, 2)
+    #print(train_embeddings.shape)
+    #assert 1 == 2
+    val_embeddings = embeddings[val_idx, :, :]
+    val_embeddings = val_embeddings[:, :, poolIndices]
+    val_embeddings = val_embeddings.flatten(1, 2)
+
+
+    input_dim = train_embeddings.shape[1]
+
+    #print("embeddings shape")
+    #print(train_embeddings.shape)
 
 
     #hidden dimension, output dimension, encoder learning rate, scaler learning rate, decay step size, (MAYBE) episodes per batch
@@ -79,7 +105,6 @@ def objective(trial):
 
 
     # Initialization
-    input_dim = INPUT_DIM #TODO Change this around. for now, itll be 1000 for max and mean pooling
     model = SoftProtoNet(input_dim=input_dim, hidden_dim=embed_hidden_dim, output_dim=embed_output_dim)
     #optimizer = optim.Adam(model.parameters(), lr=1e-2)
     optimizer = optim.Adam([
@@ -149,7 +174,6 @@ def objective(trial):
                 
                 # current_lr = scheduler.get_last_lr()[0]
                 
-                #TODO impl this a bit later
                 # Log the lowest validation loss
                 if best_val_loss == -1: best_val_loss = val_loss
                 if val_loss < best_val_loss:
@@ -173,5 +197,5 @@ def objective(trial):
                     
             model.train()
 
-            print(f"Episode {episode_batch * batch_episode_count} | Train Loss: {loss.item() * batch_episode_count:.4f} | Validation Loss: {val_loss:.4f} | Alpha: {F.softplus(model.alpha).item():.4f} | Beta: {model.beta.item():.4f} | Enc Norm: {enc_weight_norm:.4f} | Enc Grad Norm: {enc_grad_norm:.4f} | AlphaBeta Grad Norm: {metric_grad_norm:.4f}")
+            #print(f"Episode {episode_batch * batch_episode_count} | Train Loss: {loss.item() * batch_episode_count:.4f} | Validation Loss: {val_loss:.4f} | Alpha: {F.softplus(model.alpha).item():.4f} | Beta: {model.beta.item():.4f} | Enc Norm: {enc_weight_norm:.4f} | Enc Grad Norm: {enc_grad_norm:.4f} | AlphaBeta Grad Norm: {metric_grad_norm:.4f}")
     return best_val_loss
