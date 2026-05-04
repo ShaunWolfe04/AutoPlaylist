@@ -1,0 +1,142 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torch.utils.data import DataLoader, Subset
+from sklearn.model_selection import KFold
+import optuna
+import numpy as np
+
+# --- 1. THE MODEL ARCHITECTURE ---
+class AudioCNN(nn.Module):
+    def __init__(self, in_channels=500, cnn_channels=64, kernel_size=5, hidden_units=128, dropout_rate=0.5, n_layers=1):
+        super(AudioCNN, self).__init__()
+        
+        # 1D Convolution
+        self.conv1 = nn.Conv1d(in_channels=in_channels, out_channels=cnn_channels, kernel_size=kernel_size)
+        
+        # Calculate pooled dimension (Max + Avg = cnn_channels * 2)
+        pooled_dim = cnn_channels * 2
+        
+        self.n_layers = n_layers
+        self.dropout = nn.Dropout(p=dropout_rate)
+        
+        # Dynamic dense layers based on Optuna
+        if self.n_layers == 0:
+            self.fc_out = nn.Linear(pooled_dim, 3)
+        elif self.n_layers == 1:
+            self.fc1 = nn.Linear(pooled_dim, hidden_units)
+            self.fc_out = nn.Linear(hidden_units, 3)
+        elif self.n_layers == 2:
+            self.fc1 = nn.Linear(pooled_dim, hidden_units)
+            self.fc2 = nn.Linear(hidden_units, hidden_units // 2)
+            self.fc_out = nn.Linear(hidden_units // 2, 3)
+
+    def forward(self, x):
+        # x shape: (Batch, 500, T)
+        x = F.relu(self.conv1(x))
+        
+        # Global Max and Average Pooling (Handles variable T dynamically)
+        max_pool = F.adaptive_max_pool1d(x, 1).squeeze(2) # Shape: (Batch, cnn_channels)
+        avg_pool = F.adaptive_avg_pool1d(x, 1).squeeze(2) # Shape: (Batch, cnn_channels)
+        
+        # Concatenate
+        x = torch.cat((max_pool, avg_pool), dim=1) # Shape: (Batch, cnn_channels * 2)
+        
+        # Fully Connected Routing
+        if self.n_layers > 0:
+            x = self.dropout(F.relu(self.fc1(x)))
+        if self.n_layers == 2:
+            x = self.dropout(F.relu(self.fc2(x)))
+            
+        # Output raw logits (NO SIGMOID HERE)
+        logits = self.fc_out(x)
+        return logits
+
+
+# --- 2. THE OPTUNA OBJECTIVE (K-FOLD) ---
+def objective(trial, dataset):
+    # Suggest Hyperparameters
+    cnn_channels = trial.suggest_int("cnn_channels", 16, 128, step=16)
+    kernel_size = trial.suggest_categorical("kernel_size", [3, 5, 7])
+    n_layers = trial.suggest_int("n_layers", 0, 2)
+    hidden_units = trial.suggest_int("hidden_units", 32, 256, step=32) if n_layers > 0 else 0
+    dropout_rate = trial.suggest_float("dropout_rate", 0.3, 0.7)
+    lr = trial.suggest_float("learning_rate", 1e-5, 1e-2, log=True)
+    weight_decay = trial.suggest_float("weight_decay", 1e-5, 1e-2, log=True)
+    optimizer_name = trial.suggest_categorical("optimizer", ["Adam", "AdamW"])
+
+    # K-Fold Setup
+    k_folds = 5
+    kfold = KFold(n_splits=k_folds, shuffle=True, random_state=42)
+    
+    fold_val_losses = []
+
+    for fold, (train_ids, val_ids) in enumerate(kfold.split(dataset)):
+        # Data Loaders (Batch Size 1 for variable T)
+        train_sub = Subset(dataset, train_ids)
+        val_sub = Subset(dataset, val_ids)
+        train_loader = DataLoader(train_sub, batch_size=1, shuffle=True)
+        val_loader = DataLoader(val_sub, batch_size=1, shuffle=False)
+
+        # Dynamic Class Weighting for Imbalance
+        all_train_labels = torch.stack([y for _, y in train_sub])
+        total_samples = len(train_sub)
+        class_sums = all_train_labels.sum(dim=0)
+        
+        # Avoid division by zero if a fold has no positive labels for a class
+        class_sums = torch.clamp(class_sums, min=1.0) 
+        pos_weight = (total_samples - class_sums) / class_sums
+        
+        criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+        
+        # Initialize Model
+        model = AudioCNN(cnn_channels=cnn_channels, kernel_size=kernel_size, 
+                         hidden_units=hidden_units, dropout_rate=dropout_rate, n_layers=n_layers)
+        
+        optimizer = getattr(optim, optimizer_name)(model.parameters(), lr=lr, weight_decay=weight_decay)
+
+        # Training Loop (Fixed to 15 epochs for rapid tuning)
+        model.train()
+        for epoch in range(15):
+            for batch_x, batch_y in train_loader:
+                optimizer.zero_grad()
+                logits = model(batch_x)
+                loss = criterion(logits, batch_y)
+                loss.backward()
+                optimizer.step()
+
+        # Validation Loop
+        model.eval()
+        val_loss = 0.0
+        with torch.no_grad():
+            for batch_x, batch_y in val_loader:
+                logits = model(batch_x)
+                loss = criterion(logits, batch_y)
+                val_loss += loss.item()
+                
+        fold_val_losses.append(val_loss / len(val_loader))
+
+    # Return the average validation loss across all 5 folds
+    return np.mean(fold_val_losses)
+
+
+# --- 3. EXECUTION ---
+if __name__ == "__main__":
+    # Load the dynamic dataset generated by your preprocessing script
+    try:
+        full_train_dataset = torch.load("train_dataset.pt")
+    except FileNotFoundError:
+        print("Dataset not found. Run preprocessing first.")
+        exit()
+
+    # Create Optuna Study
+    study = optuna.create_study(direction="minimize")
+    
+    # Optimize
+    print(f"Starting tuning on {len(full_train_dataset)} training samples...")
+    study.optimize(lambda trial: objective(trial, full_train_dataset), n_trials=50)
+
+    print("\nBest Hyperparameters:")
+    for key, value in study.best_params.items():
+        print(f"  {key}: {value}")
