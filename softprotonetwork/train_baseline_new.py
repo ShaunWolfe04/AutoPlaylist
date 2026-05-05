@@ -14,7 +14,7 @@ MAX_EPISODES = 20000
 VAL_EVERY = 100
 #LR_DECAY_EVERY = 1500 now being handled by the hyperparam optimizer
 BATCH_EPISODE_COUNT = 4
-MAX_VALS_NO_IMPROVE = 30
+MAX_VALS_NO_IMPROVE = 100
 
 assert TRAIN_SPLIT + VAL_SPLIT == 1.0
 
@@ -39,10 +39,10 @@ def get_weight_norm(parameters):
 # Load training and labels all into memory, which should only take like a gigabyte ish
 # train_embeddings should just be [num songs, embedding dimension]
 # train_labels should be [num songs, num playlists]
-embeddings = torch.from_numpy(np.load("../all_embeddings.npy")).float()
-labels = torch.from_numpy(np.load("../all_labels.npy")).float()
+embeddings = torch.from_numpy(np.load("../train_embeddings_all_pools.npy")).float()
+labels = torch.from_numpy(np.load("../train_labels.npy")).float()
 
-# Split into train test val
+# Split into train val
 num_songs = embeddings.shape[0]
 indics = np.random.permutation(num_songs)
 train_split = int(TRAIN_SPLIT * num_songs)
@@ -50,20 +50,34 @@ train_split = int(TRAIN_SPLIT * num_songs)
 train_idx = indics[:train_split]
 val_idx = indics[train_split:]
 
-
-train_embeddings = embeddings[train_idx]
+#train_embeddings = embeddings[train_idx]
 train_labels = labels[train_idx]
-val_embeddings = embeddings[val_idx]
+#val_embeddings = embeddings[val_idx]
 val_labels = labels[val_idx]
-print(f"Songs -> Train: {train_embeddings.shape[0]} | Val: {val_embeddings.shape[0]}")
+#print(f"Songs -> Train: {train_embeddings.shape[0]} | Val: {val_embeddings.shape[0]}")
 
-
+pools = ["min", "max", "mean", "var"]
 def objective(trial):
-    #TODO add suggestion for pooling strategy
-        #we could do a bunch of bool suggestions for min,max,mean,var
+
+    # collect only the pooled parameters
+    poolingParameters = "min-max-mean"
+    poolIndices = []
+    for param in poolingParameters.split("-"):
+        poolIndices.append(pools.index(param))
+    #print(embeddings.shape)
+    #print(poolIndices)
+    train_embeddings = embeddings[train_idx, :, :]
+    train_embeddings = train_embeddings[:, :, poolIndices]
+    #print(train_embeddings.shape)
+    train_embeddings = train_embeddings.flatten(1, 2)
+    #print(train_embeddings.shape)
+    #assert 1 == 2
+    val_embeddings = embeddings[val_idx, :, :]
+    val_embeddings = val_embeddings[:, :, poolIndices]
+    val_embeddings = val_embeddings.flatten(1, 2)
 
     batch_episode_count = trial.suggest_int("batch_episode_count", 1, 8)
-    scaler_lr = trial.suggest_float("scaler_lr", 1e-3, 1e-1, log=True)
+    scaler_lr = trial.suggest_float("scaler_lr", 1e-7, 1e-1, log=True)
 
     decay_step_size = trial.suggest_int("decay_step_size", 500, 2500, step=500)
 
@@ -72,8 +86,9 @@ def objective(trial):
     #parameter selection
 
 
+
     # Initialization
-    input_dim = INPUT_DIM #TODO Change this around. for now, itll be 1000 for max and mean pooling
+    input_dim = train_embeddings.shape[1] #TODO Change this around. for now, itll be 1000 for max and mean pooling
     model = BaselineSoftProtoNet()
     #optimizer = optim.Adam(model.parameters(), lr=1e-2)
     optimizer = optim.Adam([
