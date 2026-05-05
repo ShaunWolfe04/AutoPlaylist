@@ -16,7 +16,9 @@ MAX_EPISODES = 20000
 VAL_EVERY = 100
 #LR_DECAY_EVERY = 1500 now being handled by the hyperparam optimizer
 BATCH_EPISODE_COUNT = 4
-MAX_VALS_NO_IMPROVE = 50
+MAX_VALS_NO_IMPROVE = 25
+
+NUM_TRIALS = 100 #train the model N times, generating N different sets of weights
 
 assert TRAIN_SPLIT + VAL_SPLIT == 1.0
 
@@ -42,6 +44,7 @@ def get_weight_norm(parameters):
 # train_embeddings should just be [num songs, embedding dimension]
 # train_labels should be [num songs, num playlists]
 embeddings = torch.from_numpy(np.load("../train_embeddings_all_pools.npy")).float()
+testembeddings = torch.from_numpy(np.load("../test_embeddings_all_pools.npy")).float()
 labels = torch.from_numpy(np.load("../train_labels.npy")).float()
 
 # Split into train val
@@ -61,7 +64,8 @@ val_labels = labels[val_idx]
 pools = ["min", "max", "mean", "var"]
 
 
-def objective(trial):
+def objective(trialNum):
+    
 
     # Determine which of the pooling fields to use
 
@@ -82,6 +86,7 @@ def objective(trial):
     val_embeddings = val_embeddings[:, :, poolIndices]
     val_embeddings = val_embeddings.flatten(1, 2)
 
+    test_embeddings = testembeddings[:, :, poolIndices].flatten(1, 2)
 
     input_dim = train_embeddings.shape[1]
 
@@ -95,8 +100,8 @@ def objective(trial):
 
     batch_episode_count = 4
 
-    encoder_lr = 7e-5
-    scaler_lr = 5.5e-5
+    encoder_lr = 7e-6
+    scaler_lr = 5.5e-6
 
     decay_step_size = 1500
 
@@ -203,9 +208,21 @@ def objective(trial):
             model.train()
 
             print(f"Episode {episode_batch * batch_episode_count} | Train Loss: {loss.item() * batch_episode_count:.4f} | Validation Loss: {val_loss:.4f} | Alpha: {F.softplus(model.alpha).item():.4f} | Beta: {model.beta.item():.4f} | Enc Norm: {enc_weight_norm:.4f} | Enc Grad Norm: {enc_grad_norm:.4f} | AlphaBeta Grad Norm: {metric_grad_norm:.4f}")
+    model.load_state_dict(best_model_weights)
+    
+    model.eval()
+    with torch.no_grad():
+        full_train_enc = model.encoder(train_embeddings)
+        full_test_enc = model.encoder(test_embeddings)
+
+        global_test_protos = model.compute_prototypes(full_train_enc, train_labels)
+        test_preds = torch.sigmoid(model(full_test_enc, global_test_protos))
+        torch.save(test_preds, f"prototypical_model_preds_{trialNum}.pt")
+    
+    
     return best_model_weights
 
 if __name__ == "__main__":
-    best = objective(None)
-    print(best)
-    print(best.shape)
+    for i in range(NUM_TRIALS):
+        best = objective(i)
+    
