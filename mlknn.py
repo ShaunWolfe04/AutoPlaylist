@@ -4,12 +4,12 @@ import pandas as pd
 import os
 
 # Config
-TRAIN_EMB_PATH = "train_embeddings.npy"
-TEST_EMB_PATH = "test_embeddings.npy"
-TRAIN_LABELS_PATH = "train_labels.npy"
-TEST_LABELS_PATH = "test_labels.npy"
+TRAIN_EMB_PATH = "train_embeddings_all_pools.npy"
+TEST_EMB_PATH = "test_embeddings_all_pools.npy"
+TRAIN_LABELS_PATH = "train_labels_all_pools.npy"
+TEST_LABELS_PATH = "test_labels_all_pools.npy"
 PLAYLIST_NAMES = ["study", "drive", "workout"]
-K_VALUES = [3, 5, 7, 10, 13]
+K_VALUES = [3, 5, 7, 10, 13, 15, 17]
 os.makedirs("results", exist_ok=True)
 OUTPUT_TO = os.path.join("results", "knn_best_predictions.csv")
 
@@ -19,6 +19,11 @@ X_test  = np.load(TEST_EMB_PATH)
 
 Y_train = np.load(TRAIN_LABELS_PATH)
 Y_test  = np.load(TEST_LABELS_PATH)
+
+# Reshape train and test sets to work with knn
+X_train = X_train.reshape(X_train.shape[0], -1)
+X_test  = X_test.reshape(X_test.shape[0], -1)
+
 
 #print(Y_train)
 print(f"Train embeddings: {X_train.shape}")
@@ -82,13 +87,16 @@ print(f"BCE = {best_score:.4f}")
 rows = []
 for i in range(len(best_preds)):
     rows.append({
-        "study": float(best_preds[i][0]),
-        "drive": float(best_preds[i][1]),
-        "workout": float(best_preds[i][2]),
+        "study_label": float(Y_test[i][0]),
+        "drive_label": float(Y_test[i][1]),
+        "workout_label": float(Y_test[i][2]),
+        "study_pred": float(best_preds[i][0]),
+        "drive_pred": float(best_preds[i][1]),
+        "workout_pred": float(best_preds[i][2]),
     })
 
 df = pd.DataFrame(rows)
-df.to_csv(OUTPUT_TO, index=False)
+df.to_csv(OUTPUT_TO, index=False, header=False)
 
 print(f"\nSaved best k kNN predictions to {OUTPUT_TO}")
 
