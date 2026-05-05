@@ -1,0 +1,413 @@
+
+Found 100 independent runs in prototypical_model_eval_all.csv.
+
+--- Final 95% Confidence Intervals ---
+MSE:        0.0593 ± 0.0001
+Macro NDCG: 0.8874 ± 0.0025
+
+--- NDCG Breakdown by Playlist (95% CI) ---
+  Study  : 0.8992 ± 0.0044
+  Drive  : 0.8655 ± 0.0029
+  Workout: 0.8975 ± 0.0055
+
+--- Per-Run Breakdown ---
+Run 01 | MSE: 0.0592 | Macro NDCG: 0.8459
+          > Study  : 0.8910
+          > Drive  : 0.8470
+          > Workout: 0.7997
+Run 02 | MSE: 0.0591 | Macro NDCG: 0.8779
+          > Study  : 0.8739
+          > Drive  : 0.8469
+          > Workout: 0.9130
+Run 03 | MSE: 0.0589 | Macro NDCG: 0.9021
+          > Study  : 0.9282
+          > Drive  : 0.8744
+          > Workout: 0.9038
+Run 04 | MSE: 0.0602 | Macro NDCG: 0.8768
+          > Study  : 0.8900
+          > Drive  : 0.8437
+          > Workout: 0.8968
+Run 05 | MSE: 0.0594 | Macro NDCG: 0.8892
+          > Study  : 0.8904
+          > Drive  : 0.8734
+          > Workout: 0.9038
+Run 06 | MSE: 0.0594 | Macro NDCG: 0.8518
+          > Study  : 0.8739
+          > Drive  : 0.8796
+          > Workout: 0.8019
+Run 07 | MSE: 0.0597 | Macro NDCG: 0.8771
+          > Study  : 0.8921
+          > Drive  : 0.8477
+          > Workout: 0.8914
+Run 08 | MSE: 0.0591 | Macro NDCG: 0.8989
+          > Study  : 0.9344
+          > Drive  : 0.8654
+          > Workout: 0.8968
+Run 09 | MSE: 0.0595 | Macro NDCG: 0.8875
+          > Study  : 0.8921
+          > Drive  : 0.8790
+          > Workout: 0.8914
+Run 10 | MSE: 0.0586 | Macro NDCG: 0.8904
+          > Study  : 0.8881
+          > Drive  : 0.8701
+          > Workout: 0.9130
+Run 11 | MSE: 0.0592 | Macro NDCG: 0.8850
+          > Study  : 0.8915
+          > Drive  : 0.8506
+          > Workout: 0.9130
+Run 12 | MSE: 0.0589 | Macro NDCG: 0.8948
+          > Study  : 0.8909
+          > Drive  : 0.8804
+          > Workout: 0.9130
+Run 13 | MSE: 0.0591 | Macro NDCG: 0.8943
+          > Study  : 0.9387
+          > Drive  : 0.8403
+          > Workout: 0.9038
+Run 14 | MSE: 0.0595 | Macro NDCG: 0.8882
+          > Study  : 0.8899
+          > Drive  : 0.8711
+          > Workout: 0.9038
+Run 15 | MSE: 0.0596 | Macro NDCG: 0.8904
+          > Study  : 0.9355
+          > Drive  : 0.8444
+          > Workout: 0.8914
+Run 16 | MSE: 0.0586 | Macro NDCG: 0.8881
+          > Study  : 0.8899
+          > Drive  : 0.8705
+          > Workout: 0.9038
+Run 17 | MSE: 0.0592 | Macro NDCG: 0.8965
+          > Study  : 0.9355
+          > Drive  : 0.8410
+          > Workout: 0.9130
+Run 18 | MSE: 0.0596 | Macro NDCG: 0.8991
+          > Study  : 0.9196
+          > Drive  : 0.8647
+          > Workout: 0.9130
+Run 19 | MSE: 0.0596 | Macro NDCG: 0.8960
+          > Study  : 0.9184
+          > Drive  : 0.8657
+          > Workout: 0.9038
+Run 20 | MSE: 0.0589 | Macro NDCG: 0.8974
+          > Study  : 0.8914
+          > Drive  : 0.8747
+          > Workout: 0.9263
+Run 21 | MSE: 0.0582 | Macro NDCG: 0.9113
+          > Study  : 0.9372
+          > Drive  : 0.8838
+          > Workout: 0.9130
+Run 22 | MSE: 0.0586 | Macro NDCG: 0.8922
+          > Study  : 0.8893
+          > Drive  : 0.8836
+          > Workout: 0.9038
+Run 23 | MSE: 0.0594 | Macro NDCG: 0.8930
+          > Study  : 0.8915
+          > Drive  : 0.8745
+          > Workout: 0.9130
+Run 24 | MSE: 0.0592 | Macro NDCG: 0.8855
+          > Study  : 0.8739
+          > Drive  : 0.8800
+          > Workout: 0.9025
+Run 25 | MSE: 0.0596 | Macro NDCG: 0.8797
+          > Study  : 0.8904
+          > Drive  : 0.8448
+          > Workout: 0.9038
+Run 26 | MSE: 0.0601 | Macro NDCG: 0.8798
+          > Study  : 0.8804
+          > Drive  : 0.8676
+          > Workout: 0.8914
+Run 27 | MSE: 0.0597 | Macro NDCG: 0.8527
+          > Study  : 0.8877
+          > Drive  : 0.8706
+          > Workout: 0.7997
+Run 28 | MSE: 0.0592 | Macro NDCG: 0.9052
+          > Study  : 0.9377
+          > Drive  : 0.8692
+          > Workout: 0.9086
+Run 29 | MSE: 0.0595 | Macro NDCG: 0.8857
+          > Study  : 0.8734
+          > Drive  : 0.8800
+          > Workout: 0.9038
+Run 30 | MSE: 0.0595 | Macro NDCG: 0.8970
+          > Study  : 0.9366
+          > Drive  : 0.8508
+          > Workout: 0.9038
+Run 31 | MSE: 0.0605 | Macro NDCG: 0.9013
+          > Study  : 0.9345
+          > Drive  : 0.8725
+          > Workout: 0.8968
+Run 32 | MSE: 0.0588 | Macro NDCG: 0.8923
+          > Study  : 0.8920
+          > Drive  : 0.8813
+          > Workout: 0.9038
+Run 33 | MSE: 0.0597 | Macro NDCG: 0.8942
+          > Study  : 0.8893
+          > Drive  : 0.8803
+          > Workout: 0.9130
+Run 34 | MSE: 0.0595 | Macro NDCG: 0.8779
+          > Study  : 0.8893
+          > Drive  : 0.8477
+          > Workout: 0.8968
+Run 35 | MSE: 0.0597 | Macro NDCG: 0.8869
+          > Study  : 0.8899
+          > Drive  : 0.8739
+          > Workout: 0.8968
+Run 36 | MSE: 0.0593 | Macro NDCG: 0.8851
+          > Study  : 0.8661
+          > Drive  : 0.8763
+          > Workout: 0.9130
+Run 37 | MSE: 0.0598 | Macro NDCG: 0.8863
+          > Study  : 0.8904
+          > Drive  : 0.8554
+          > Workout: 0.9130
+Run 38 | MSE: 0.0593 | Macro NDCG: 0.8903
+          > Study  : 0.8899
+          > Drive  : 0.8658
+          > Workout: 0.9152
+Run 39 | MSE: 0.0590 | Macro NDCG: 0.8977
+          > Study  : 0.9099
+          > Drive  : 0.8808
+          > Workout: 0.9025
+Run 40 | MSE: 0.0590 | Macro NDCG: 0.8760
+          > Study  : 0.8915
+          > Drive  : 0.8449
+          > Workout: 0.8914
+Run 41 | MSE: 0.0589 | Macro NDCG: 0.8909
+          > Study  : 0.8899
+          > Drive  : 0.8697
+          > Workout: 0.9130
+Run 42 | MSE: 0.0589 | Macro NDCG: 0.8568
+          > Study  : 0.8899
+          > Drive  : 0.8807
+          > Workout: 0.7997
+Run 43 | MSE: 0.0598 | Macro NDCG: 0.8891
+          > Study  : 0.8899
+          > Drive  : 0.8735
+          > Workout: 0.9038
+Run 44 | MSE: 0.0591 | Macro NDCG: 0.8930
+          > Study  : 0.8920
+          > Drive  : 0.8741
+          > Workout: 0.9130
+Run 45 | MSE: 0.0598 | Macro NDCG: 0.8873
+          > Study  : 0.8899
+          > Drive  : 0.8683
+          > Workout: 0.9038
+Run 46 | MSE: 0.0594 | Macro NDCG: 0.8829
+          > Study  : 0.8910
+          > Drive  : 0.8446
+          > Workout: 0.9130
+Run 47 | MSE: 0.0592 | Macro NDCG: 0.8967
+          > Study  : 0.9175
+          > Drive  : 0.8758
+          > Workout: 0.8968
+Run 48 | MSE: 0.0590 | Macro NDCG: 0.8942
+          > Study  : 0.9383
+          > Drive  : 0.8474
+          > Workout: 0.8968
+Run 49 | MSE: 0.0594 | Macro NDCG: 0.8495
+          > Study  : 0.8642
+          > Drive  : 0.8797
+          > Workout: 0.8046
+Run 50 | MSE: 0.0596 | Macro NDCG: 0.8836
+          > Study  : 0.8826
+          > Drive  : 0.8690
+          > Workout: 0.8990
+Run 51 | MSE: 0.0594 | Macro NDCG: 0.8790
+          > Study  : 0.8893
+          > Drive  : 0.8509
+          > Workout: 0.8968
+Run 52 | MSE: 0.0601 | Macro NDCG: 0.8700
+          > Study  : 0.8723
+          > Drive  : 0.8409
+          > Workout: 0.8968
+Run 53 | MSE: 0.0592 | Macro NDCG: 0.8921
+          > Study  : 0.8893
+          > Drive  : 0.8833
+          > Workout: 0.9038
+Run 54 | MSE: 0.0598 | Macro NDCG: 0.8928
+          > Study  : 0.8898
+          > Drive  : 0.8755
+          > Workout: 0.9130
+Run 55 | MSE: 0.0588 | Macro NDCG: 0.8898
+          > Study  : 0.8904
+          > Drive  : 0.8660
+          > Workout: 0.9130
+Run 56 | MSE: 0.0591 | Macro NDCG: 0.8960
+          > Study  : 0.8907
+          > Drive  : 0.8844
+          > Workout: 0.9130
+Run 57 | MSE: 0.0590 | Macro NDCG: 0.8898
+          > Study  : 0.8899
+          > Drive  : 0.8665
+          > Workout: 0.9130
+Run 58 | MSE: 0.0598 | Macro NDCG: 0.9054
+          > Study  : 0.9355
+          > Drive  : 0.8656
+          > Workout: 0.9152
+Run 59 | MSE: 0.0587 | Macro NDCG: 0.9007
+          > Study  : 0.9228
+          > Drive  : 0.8754
+          > Workout: 0.9038
+Run 60 | MSE: 0.0596 | Macro NDCG: 0.8798
+          > Study  : 0.8826
+          > Drive  : 0.8439
+          > Workout: 0.9130
+Run 61 | MSE: 0.0591 | Macro NDCG: 0.8754
+          > Study  : 0.8899
+          > Drive  : 0.8447
+          > Workout: 0.8914
+Run 62 | MSE: 0.0598 | Macro NDCG: 0.8779
+          > Study  : 0.8734
+          > Drive  : 0.8474
+          > Workout: 0.9130
+Run 63 | MSE: 0.0589 | Macro NDCG: 0.8968
+          > Study  : 0.9206
+          > Drive  : 0.8783
+          > Workout: 0.8914
+Run 64 | MSE: 0.0587 | Macro NDCG: 0.9100
+          > Study  : 0.9372
+          > Drive  : 0.8798
+          > Workout: 0.9130
+Run 65 | MSE: 0.0599 | Macro NDCG: 0.8822
+          > Study  : 0.8893
+          > Drive  : 0.8660
+          > Workout: 0.8914
+Run 66 | MSE: 0.0591 | Macro NDCG: 0.8954
+          > Study  : 0.8904
+          > Drive  : 0.8827
+          > Workout: 0.9130
+Run 67 | MSE: 0.0594 | Macro NDCG: 0.8953
+          > Study  : 0.9360
+          > Drive  : 0.8472
+          > Workout: 0.9025
+Run 68 | MSE: 0.0591 | Macro NDCG: 0.8831
+          > Study  : 0.8904
+          > Drive  : 0.8655
+          > Workout: 0.8933
+Run 69 | MSE: 0.0588 | Macro NDCG: 0.8839
+          > Study  : 0.8899
+          > Drive  : 0.8703
+          > Workout: 0.8914
+Run 70 | MSE: 0.0598 | Macro NDCG: 0.8944
+          > Study  : 0.8871
+          > Drive  : 0.8831
+          > Workout: 0.9130
+Run 71 | MSE: 0.0597 | Macro NDCG: 0.8831
+          > Study  : 0.8899
+          > Drive  : 0.8441
+          > Workout: 0.9152
+Run 72 | MSE: 0.0595 | Macro NDCG: 0.9001
+          > Study  : 0.9377
+          > Drive  : 0.8712
+          > Workout: 0.8914
+Run 73 | MSE: 0.0594 | Macro NDCG: 0.9030
+          > Study  : 0.9360
+          > Drive  : 0.8761
+          > Workout: 0.8968
+Run 74 | MSE: 0.0596 | Macro NDCG: 0.8989
+          > Study  : 0.8910
+          > Drive  : 0.8925
+          > Workout: 0.9130
+Run 75 | MSE: 0.0593 | Macro NDCG: 0.8884
+          > Study  : 0.8910
+          > Drive  : 0.8826
+          > Workout: 0.8914
+Run 76 | MSE: 0.0595 | Macro NDCG: 0.8737
+          > Study  : 0.8719
+          > Drive  : 0.8362
+          > Workout: 0.9130
+Run 77 | MSE: 0.0583 | Macro NDCG: 0.8863
+          > Study  : 0.8899
+          > Drive  : 0.8721
+          > Workout: 0.8968
+Run 78 | MSE: 0.0599 | Macro NDCG: 0.8914
+          > Study  : 0.9355
+          > Drive  : 0.8472
+          > Workout: 0.8914
+Run 79 | MSE: 0.0591 | Macro NDCG: 0.8888
+          > Study  : 0.8906
+          > Drive  : 0.8720
+          > Workout: 0.9038
+Run 80 | MSE: 0.0587 | Macro NDCG: 0.8872
+          > Study  : 0.8721
+          > Drive  : 0.8763
+          > Workout: 0.9130
+Run 81 | MSE: 0.0594 | Macro NDCG: 0.9014
+          > Study  : 0.9196
+          > Drive  : 0.8715
+          > Workout: 0.9130
+Run 82 | MSE: 0.0598 | Macro NDCG: 0.8798
+          > Study  : 0.8750
+          > Drive  : 0.8465
+          > Workout: 0.9179
+Run 83 | MSE: 0.0600 | Macro NDCG: 0.8924
+          > Study  : 0.8899
+          > Drive  : 0.8744
+          > Workout: 0.9130
+Run 84 | MSE: 0.0593 | Macro NDCG: 0.8595
+          > Study  : 0.8899
+          > Drive  : 0.8890
+          > Workout: 0.7997
+Run 85 | MSE: 0.0592 | Macro NDCG: 0.8800
+          > Study  : 0.8893
+          > Drive  : 0.8469
+          > Workout: 0.9038
+Run 86 | MSE: 0.0590 | Macro NDCG: 0.8907
+          > Study  : 0.9344
+          > Drive  : 0.8410
+          > Workout: 0.8968
+Run 87 | MSE: 0.0590 | Macro NDCG: 0.8539
+          > Study  : 0.8920
+          > Drive  : 0.8698
+          > Workout: 0.7997
+Run 88 | MSE: 0.0599 | Macro NDCG: 0.8878
+          > Study  : 0.9344
+          > Drive  : 0.8374
+          > Workout: 0.8914
+Run 89 | MSE: 0.0583 | Macro NDCG: 0.8850
+          > Study  : 0.8910
+          > Drive  : 0.8511
+          > Workout: 0.9130
+Run 90 | MSE: 0.0597 | Macro NDCG: 0.8726
+          > Study  : 0.8644
+          > Drive  : 0.8403
+          > Workout: 0.9130
+Run 91 | MSE: 0.0595 | Macro NDCG: 0.9044
+          > Study  : 0.9340
+          > Drive  : 0.8755
+          > Workout: 0.9038
+Run 92 | MSE: 0.0594 | Macro NDCG: 0.9027
+          > Study  : 0.9372
+          > Drive  : 0.8740
+          > Workout: 0.8968
+Run 93 | MSE: 0.0588 | Macro NDCG: 0.8814
+          > Study  : 0.8921
+          > Drive  : 0.8483
+          > Workout: 0.9038
+Run 94 | MSE: 0.0588 | Macro NDCG: 0.9037
+          > Study  : 0.9388
+          > Drive  : 0.8754
+          > Workout: 0.8968
+Run 95 | MSE: 0.0594 | Macro NDCG: 0.9043
+          > Study  : 0.9355
+          > Drive  : 0.8644
+          > Workout: 0.9130
+Run 96 | MSE: 0.0600 | Macro NDCG: 0.8833
+          > Study  : 0.8894
+          > Drive  : 0.8636
+          > Workout: 0.8968
+Run 97 | MSE: 0.0592 | Macro NDCG: 0.8853
+          > Study  : 0.8711
+          > Drive  : 0.8718
+          > Workout: 0.9130
+Run 98 | MSE: 0.0589 | Macro NDCG: 0.8895
+          > Study  : 0.8888
+          > Drive  : 0.8749
+          > Workout: 0.9047
+Run 99 | MSE: 0.0586 | Macro NDCG: 0.8895
+          > Study  : 0.8909
+          > Drive  : 0.8739
+          > Workout: 0.9038
+Run 100 | MSE: 0.0595 | Macro NDCG: 0.8822
+          > Study  : 0.8611
+          > Drive  : 0.8724
+          > Workout: 0.9130
