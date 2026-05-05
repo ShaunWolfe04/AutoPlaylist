@@ -1,0 +1,10 @@
+2pool model: max-var 4 1000 3.5e-5 1024 1024 5.5e-5		0.40
+3pool model: min-max-mean 4 1000 7e-5 1024 256 	0.0007		0.388
+4pool model: all4 3 1500 0.004 512 64 4e-6			0.36
+
+TODO LIST:
+	save 3pool model
+	evaluate 3pool model
+	study baseline with 3pool
+	run mlknn with 3pool
+	
